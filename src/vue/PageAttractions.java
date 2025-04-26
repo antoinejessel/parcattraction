@@ -1,13 +1,17 @@
 package vue;
 
+import dao.AttractionDAO;
+import modele.Attraction;
 import modele.Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class PageAttractions extends JFrame {
 
     private Client clientConnecte;
+    private AttractionDAO attractionDAO = new AttractionDAO();
 
     public PageAttractions(Client client) {
         this.clientConnecte = client;
@@ -25,19 +29,19 @@ public class PageAttractions extends JFrame {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane);
 
-        // Cartes attractions
-        panelGlobal.add(creerCarteAttraction(
-                "Grand Huit", "Sensations fortes garanties !", "src/images/grand_huit.jpg", 1, 15.0));
-
-        panelGlobal.add(Box.createVerticalStrut(10));
-
-        panelGlobal.add(creerCarteAttraction(
-                "Chaises Volantes", "Voler comme un oiseau !", "src/images/chaises_volantes.jpg", 2, 8.0));
-
-        panelGlobal.add(Box.createVerticalStrut(10));
-
-        panelGlobal.add(creerCarteAttraction(
-                "Maison Hantée", "Oserez-vous y entrer ?", "src/images/maison_hantee.jpg", 3, 10.0));
+        List<Attraction> attractions = attractionDAO.findAll();
+        for (Attraction attraction : attractions) {
+            if (attraction.isActif()) {
+                panelGlobal.add(creerCarteAttraction(
+                        attraction.getNom(),
+                        attraction.getDescription(),
+                        attraction.getImagePath(),
+                        attraction.getIdAttraction(),
+                        attraction.getPrix()
+                ));
+                panelGlobal.add(Box.createVerticalStrut(10));
+            }
+        }
     }
 
     private JPanel creerCarteAttraction(String nom, String description, String imagePath, int idAttraction, double prix) {
@@ -64,7 +68,6 @@ public class PageAttractions extends JFrame {
         textArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
         carte.add(textArea, BorderLayout.CENTER);
 
-        // Clic sur carte
         carte.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -73,17 +76,5 @@ public class PageAttractions extends JFrame {
         });
 
         return carte;
-    }
-
-    public static void main(String[] args) {
-        // Simuler un client temporaire pour test
-        modele.Client client = new modele.Client();
-        client.setNom("Test");
-        client.setEmail("test@test.com");
-        client.setMotDePasse("1234");
-        client.setTypeClient("membre");
-        client.setPointsFidelite(0);
-
-        SwingUtilities.invokeLater(() -> new PageAttractions(client).setVisible(true));
     }
 }

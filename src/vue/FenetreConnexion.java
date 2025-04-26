@@ -66,8 +66,8 @@ public class FenetreConnexion extends JFrame {
 
             if (mdpBase.equals(motDePasse)) {
                 // ✅ Redirection selon le type de client
-                if (client.getTypeClient().equals("admin")) {
-                    new AdminPanel(client).setVisible(true);
+                if (client.getTypeClient().equalsIgnoreCase("admin")) {
+                    new AdminGestionAttractions().setVisible(true); // CORRECTION ICI
                 } else {
                     new PageAttractions(client).setVisible(true);
                 }
@@ -80,6 +80,7 @@ public class FenetreConnexion extends JFrame {
             labelErreur.setText("Aucun compte trouvé pour cet email.");
         }
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new FenetreConnexion().setVisible(true));
