@@ -10,7 +10,7 @@ import java.sql.Date;
 public class ReservationDAO {
 
     public static boolean creerReservation(int idClient, int idAttraction, Date dateReservation, double prixTotal) {
-        String sql = "INSERT INTO Reservation (id_client, id_attraction, date_reservation, prix_total) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO reservation (id_client, id_attraction, date_reservation, prix_total) VALUES (?, ?, ?, ?)";
 
         try (Connection con = ConnexionBDD.getConnexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -22,15 +22,15 @@ public class ReservationDAO {
 
             int result = ps.executeUpdate();
             if (result > 0) {
-                System.out.println("✅ Réservation insérée avec succès !");
+                System.out.println("Réservation insérée avec succès !");
                 return true;
             } else {
-                System.out.println("❌ Aucune ligne insérée !");
+                System.out.println("Aucune ligne insérée !");
                 return false;
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ ERREUR SQL lors de la réservation : " + e.getMessage());
+            System.err.println("ERREUR SQL lors de la réservation : " + e.getMessage());
             return false;
         }
     }

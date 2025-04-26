@@ -37,7 +37,7 @@ public class FenetreAccueil extends JFrame {
 
         // Actions
         btnInscription.addActionListener(e -> {
-            new FenetreInscription().setVisible(true); // ✅ c'est bien ta classe existante
+            new FenetreInscription().setVisible(true); // c'est bien ta classe existante
             dispose();
         });
 

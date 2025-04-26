@@ -48,7 +48,7 @@ public class PageReservation extends JFrame {
         bottom.setLayout(new FlowLayout());
 
         bottom.add(new JLabel("Choisissez une date :"));
-        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel());
+        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH)); // 🔥 Date par défaut = aujourd'hui
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd"));
         bottom.add(dateSpinner);
 
@@ -59,6 +59,17 @@ public class PageReservation extends JFrame {
             Date utilDate = (Date) dateSpinner.getValue();
             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
 
+            // 🔥 Vérifier si la date choisie est aujourd'hui ou dans le futur
+            java.sql.Date aujourdHui = new java.sql.Date(System.currentTimeMillis());
+
+            if (sqlDate.before(aujourdHui)) {
+                JOptionPane.showMessageDialog(this,
+                        "Vous ne pouvez pas réserver pour une date passée.",
+                        "Date invalide", JOptionPane.WARNING_MESSAGE);
+                return; // 🚫 Ne pas continuer si la date est dans le passé
+            }
+
+            // Sinon ➔ continuer la réservation
             boolean success = ReservationDAO.creerReservation(
                     clientConnecte.getId(), idAttraction, sqlDate, prixAttraction);
 
