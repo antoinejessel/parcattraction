@@ -38,12 +38,10 @@ public class FenetreInvite extends JFrame {
         add(panelBoutons, BorderLayout.SOUTH);
 
         btnVoirCatalogue.addActionListener(e -> {
-            // Tu peux créer un vrai MenuClient avec client=null pour mode invité
             JOptionPane.showMessageDialog(this,
                     "Redirection vers la vue catalogue (simulée)...",
                     "Catalogue", JOptionPane.INFORMATION_MESSAGE);
-            // new MenuClient(null).setVisible(true); // si tu as cette classe
-            // dispose();
+
         });
 
         btnRetour.addActionListener(e -> {

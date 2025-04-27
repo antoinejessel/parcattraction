@@ -10,7 +10,7 @@ public class Reservation {
     private Date dateReservation;
     private Timestamp dateCreation;
     private double prixTotal;
-    private Integer idReduction; // peut être null
+    private Integer idReduction;
 
     public Reservation() {}
 

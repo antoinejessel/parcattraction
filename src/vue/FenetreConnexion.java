@@ -65,7 +65,6 @@ public class FenetreConnexion extends JFrame {
             String mdpBase = client.getMotDePasse().trim();
 
             if (mdpBase.equals(motDePasse)) {
-                // ✅ Redirection selon le type de client
                 if (client.getTypeClient().equalsIgnoreCase("admin")) {
                     new AdminGestionAttractions().setVisible(true); // CORRECTION ICI
                 } else {

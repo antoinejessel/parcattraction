@@ -29,7 +29,7 @@ public class ClientDAO {
             return true;
 
         } catch (SQLIntegrityConstraintViolationException e) {
-            System.err.println("⚠️ Email déjà utilisé : " + client.getEmail());
+            System.err.println("Email déjà utilisé : " + client.getEmail());
             return false;
 
         } catch (SQLException e) {
