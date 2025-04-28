@@ -11,56 +11,70 @@ import java.util.List;
 public class PageAttractions extends JFrame {
 
     private Client clientConnecte;
-    private AttractionDAO attractionDAO = new AttractionDAO();
+    private AttractionDAO attractionDAO;
 
     public PageAttractions(Client client) {
         this.clientConnecte = client;
+        this.attractionDAO = new AttractionDAO();
 
         setTitle("Bienvenue au Parc d'Attractions");
-        setSize(800, 600);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(900, 700);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         JPanel panelGlobal = new JPanel();
         panelGlobal.setLayout(new BoxLayout(panelGlobal, BoxLayout.Y_AXIS));
-        panelGlobal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panelGlobal.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JScrollPane scrollPane = new JScrollPane(panelGlobal);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        add(scrollPane);
+        add(scrollPane, BorderLayout.CENTER);
 
         List<Attraction> attractions = attractionDAO.findAll();
         for (Attraction attraction : attractions) {
-            if (attraction.isActif()) {
-                panelGlobal.add(creerCarteAttraction(
-                        attraction.getNom(),
-                        attraction.getDescription(),
-                        attraction.getImagePath(),
-                        attraction.getIdAttraction(),
-                        attraction.getPrix()
-                ));
-                panelGlobal.add(Box.createVerticalStrut(10));
-            }
+            panelGlobal.add(creerCarteAttraction(attraction));
+            panelGlobal.add(Box.createVerticalStrut(20));
         }
+
+        JButton btnRetour = new JButton("Retour à l'accueil");
+        btnRetour.setBackground(new Color(52, 152, 219));
+        btnRetour.setForeground(Color.WHITE);
+        btnRetour.setFocusPainted(false);
+        btnRetour.setFont(new Font("SansSerif", Font.BOLD, 16));
+        btnRetour.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnRetour.addActionListener(e -> {
+            new FenetreAccueil().setVisible(true);
+            dispose();
+        });
+
+        JPanel footer = new JPanel();
+        footer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        footer.add(btnRetour);
+
+        add(footer, BorderLayout.SOUTH);
+
+        setVisible(true);
     }
 
-    private JPanel creerCarteAttraction(String nom, String description, String imagePath, int idAttraction, double prix) {
+    private JPanel creerCarteAttraction(Attraction attraction) {
         JPanel carte = new JPanel(new BorderLayout());
-        carte.setBorder(BorderFactory.createTitledBorder(nom));
-        carte.setMaximumSize(new Dimension(750, 250));
-        carte.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        carte.setBorder(BorderFactory.createTitledBorder(attraction.getNom()));
+        carte.setMaximumSize(new Dimension(800, 250));
         carte.setBackground(Color.WHITE);
+        carte.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        try {
-            ImageIcon icon = new ImageIcon(imagePath);
-            Image img = icon.getImage().getScaledInstance(200, 150, Image.SCALE_SMOOTH);
-            JLabel imageLabel = new JLabel(new ImageIcon(img));
-            carte.add(imageLabel, BorderLayout.WEST);
-        } catch (Exception e) {
-            carte.add(new JLabel("Image non trouvée"), BorderLayout.WEST);
+        JLabel imageLabel;
+        if (attraction.getImage() != null) {
+            ImageIcon icon = new ImageIcon(attraction.getImage());
+            Image img = icon.getImage().getScaledInstance(250, 180, Image.SCALE_SMOOTH);
+            imageLabel = new JLabel(new ImageIcon(img));
+        } else {
+            imageLabel = new JLabel("Image non trouvée");
         }
+        carte.add(imageLabel, BorderLayout.WEST);
 
-        JTextArea textArea = new JTextArea(description);
+        JTextArea textArea = new JTextArea(attraction.getDescription());
         textArea.setWrapStyleWord(true);
         textArea.setLineWrap(true);
         textArea.setEditable(false);
@@ -71,10 +85,22 @@ public class PageAttractions extends JFrame {
         carte.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                new PageReservation(nom, imagePath, description, idAttraction, prix, clientConnecte).setVisible(true);
+                new PageReservation(attraction.getNom(), attraction.getImage(), attraction.getDescription(), attraction.getIdAttraction(), attraction.getPrix(), clientConnecte).setVisible(true);
+                dispose();
             }
         });
 
         return carte;
+    }
+
+    public static void main(String[] args) {
+        Client client = new Client();
+        client.setNom("Test");
+        client.setEmail("test@test.com");
+        client.setMotDePasse("1234");
+        client.setTypeClient("membre");
+        client.setPointsFidelite(0);
+
+        SwingUtilities.invokeLater(() -> new PageAttractions(client).setVisible(true));
     }
 }

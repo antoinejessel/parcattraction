@@ -5,108 +5,110 @@ import modele.Client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Date;
 
 public class FenetreInscription extends JFrame {
 
-    private JTextField fieldNom, fieldEmail, fieldAge;
-    private JPasswordField fieldMdp;
-    private JButton btnInscrire, btnRetour;
-    private JLabel labelMessage;
+    private JTextField emailField;
+    private JPasswordField passwordField;
+    private JTextField nomField;
+    private JButton btnInscription, btnRetour;
+    private JLabel labelErreur;
 
     public FenetreInscription() {
-        setTitle("Inscription - Nouveau client");
-        setSize(400, 320);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setTitle("Inscription");
+        setSize(400, 350);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JLabel labelTitre = new JLabel("Création d’un compte client", SwingConstants.CENTER);
-        labelTitre.setFont(new Font("Arial", Font.BOLD, 16));
-        add(labelTitre, BorderLayout.NORTH);
+        JLabel titre = new JLabel("Créer un compte", SwingConstants.CENTER);
+        titre.setFont(new Font("SansSerif", Font.BOLD, 22));
+        titre.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        add(titre, BorderLayout.NORTH);
 
-        JPanel panelForm = new JPanel(new GridLayout(5, 2, 10, 10));
-        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        JPanel panelForm = new JPanel();
+        panelForm.setLayout(new BoxLayout(panelForm, BoxLayout.Y_AXIS));
+        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 60, 20, 60));
 
-        panelForm.add(new JLabel("Nom :"));
-        fieldNom = new JTextField();
-        panelForm.add(fieldNom);
+        nomField = new JTextField();
+        nomField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        nomField.setBorder(BorderFactory.createTitledBorder("Nom"));
 
-        panelForm.add(new JLabel("Email :"));
-        fieldEmail = new JTextField();
-        panelForm.add(fieldEmail);
+        emailField = new JTextField();
+        emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        emailField.setBorder(BorderFactory.createTitledBorder("Email"));
 
-        panelForm.add(new JLabel("Mot de passe :"));
-        fieldMdp = new JPasswordField();
-        panelForm.add(fieldMdp);
+        passwordField = new JPasswordField();
+        passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        passwordField.setBorder(BorderFactory.createTitledBorder("Mot de passe"));
 
-        panelForm.add(new JLabel("Âge :"));
-        fieldAge = new JTextField();
-        panelForm.add(fieldAge);
+        labelErreur = new JLabel("", SwingConstants.CENTER);
+        labelErreur.setForeground(Color.RED);
 
-        labelMessage = new JLabel("");
-        labelMessage.setForeground(Color.RED);
-        panelForm.add(labelMessage);
+        btnInscription = creerBouton("S'inscrire", new Color(46, 204, 113));
+        btnRetour = creerBouton("Retour", new Color(52, 152, 219));
 
-        btnInscrire = new JButton("Créer un compte");
-        panelForm.add(btnInscrire);
+        panelForm.add(nomField);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(emailField);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(passwordField);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(labelErreur);
+        panelForm.add(Box.createVerticalStrut(20));
+        panelForm.add(btnInscription);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(btnRetour);
 
         add(panelForm, BorderLayout.CENTER);
 
-        btnRetour = new JButton("Retour à l'accueil");
-        add(btnRetour, BorderLayout.SOUTH);
-
-        btnInscrire.addActionListener(e -> inscrireClient());
+        btnInscription.addActionListener(e -> sInscrire());
         btnRetour.addActionListener(e -> {
             new FenetreAccueil().setVisible(true);
             dispose();
         });
+
+        setVisible(true);
     }
 
-    private void inscrireClient() {
-        String nom = fieldNom.getText().trim();
-        String email = fieldEmail.getText().trim();
-        String mdp = new String(fieldMdp.getPassword()).trim();
-        String ageText = fieldAge.getText().trim();
+    private JButton creerBouton(String texte, Color couleur) {
+        JButton bouton = new JButton(texte);
+        bouton.setBackground(couleur);
+        bouton.setForeground(Color.WHITE);
+        bouton.setFocusPainted(false);
+        bouton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        return bouton;
+    }
 
-        if (nom.isEmpty() || email.isEmpty() || mdp.isEmpty() || ageText.isEmpty()) {
-            labelMessage.setText("Tous les champs sont obligatoires.");
+    private void sInscrire() {
+        String nom = nomField.getText().trim();
+        String email = emailField.getText().trim();
+        String motDePasse = new String(passwordField.getPassword()).trim();
+
+        if (nom.isEmpty() || email.isEmpty() || motDePasse.isEmpty()) {
+            labelErreur.setText("Veuillez remplir tous les champs.");
             return;
         }
 
-        try {
-            int age = Integer.parseInt(ageText);
-            if (age < 0 || age > 120) {
-                labelMessage.setText("Âge invalide.");
-                return;
-            }
+        Client client = new Client();
+        client.setNom(nom);
+        client.setEmail(email);
+        client.setMotDePasse(motDePasse);
+        client.setTypeClient("membre");
+        client.setPointsFidelite(0);
 
-            Client client = new Client();
-            client.setNom(nom);
-            client.setEmail(email);
-            client.setMotDePasse(mdp);
-            client.setDateNaissance(new Date(System.currentTimeMillis())); // à remplacer si tu veux une date réelle
-            client.setTypeClient("membre");
-            client.setPointsFidelite(0);
+        boolean success = ClientDAO.insert(client);
 
-            boolean success = ClientDAO.insert(client);
-
-            if (success) {
-                JOptionPane.showMessageDialog(this,
-                        "Inscription réussie ! Vous pouvez maintenant vous connecter.",
-                        "Succès", JOptionPane.INFORMATION_MESSAGE);
-                new FenetreConnexion().setVisible(true);
-                dispose();
-            } else {
-                labelMessage.setText("Email déjà utilisé !");
-            }
-
-        } catch (NumberFormatException ex) {
-            labelMessage.setText("Âge doit être un entier.");
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Inscription réussie !");
+            new FenetreConnexion().setVisible(true);
+            dispose();
+        } else {
+            labelErreur.setText("Erreur lors de l'inscription.");
         }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FenetreInscription().setVisible(true));
+        SwingUtilities.invokeLater(FenetreInscription::new);
     }
 }

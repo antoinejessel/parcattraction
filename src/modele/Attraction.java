@@ -7,18 +7,18 @@ public class Attraction {
     private double prix;
     private String description;
     private boolean actif;
-    private String imagePath; // 🔥 Nouveau champ
+    private byte[] image;
 
     public Attraction() {}
 
-    public Attraction(int idAttraction, String nom, String type, double prix, String description, boolean actif, String imagePath) {
+    public Attraction(int idAttraction, String nom, String type, double prix, String description, boolean actif, byte[] image) {
         this.idAttraction = idAttraction;
         this.nom = nom;
         this.type = type;
         this.prix = prix;
         this.description = description;
         this.actif = actif;
-        this.imagePath = imagePath;
+        this.image = image;
     }
 
     public int getIdAttraction() {
@@ -69,11 +69,11 @@ public class Attraction {
         this.actif = actif;
     }
 
-    public String getImagePath() {
-        return imagePath;
+    public byte[] getImage() {
+        return image;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setImage(byte[] image) {
+        this.image = image;
     }
 }

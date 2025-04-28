@@ -10,24 +10,25 @@ public class FenetreAccueil extends JFrame {
     private JButton btnInvite;
 
     public FenetreAccueil() {
-        setTitle("Bienvenue dans le Parc d'Attractions");
-        setSize(400, 250);
+        setTitle("Bienvenue au Parc d'Attractions");
+        setSize(500, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Titre
-        JLabel labelTitre = new JLabel("Bienvenue !", SwingConstants.CENTER);
-        labelTitre.setFont(new Font("Arial", Font.BOLD, 20));
+        JLabel labelTitre = new JLabel("Bienvenue dans notre Parc", SwingConstants.CENTER);
+        labelTitre.setFont(new Font("SansSerif", Font.BOLD, 26));
+        labelTitre.setBorder(BorderFactory.createEmptyBorder(30, 0, 30, 0));
+
         add(labelTitre, BorderLayout.NORTH);
 
-        // Boutons
-        JPanel panelBoutons = new JPanel(new GridLayout(3, 1, 10, 10));
+        JPanel panelBoutons = new JPanel();
+        panelBoutons.setLayout(new GridLayout(3, 1, 20, 20));
         panelBoutons.setBorder(BorderFactory.createEmptyBorder(20, 60, 20, 60));
 
-        btnInscription = new JButton("Inscription (Nouveau client)");
-        btnConnexion = new JButton("Connexion (Client ou Admin)");
-        btnInvite = new JButton("Connexion rapide (Invité)");
+        btnInscription = creerBouton("Inscription (Nouveau client)", new Color(52, 152, 219));
+        btnConnexion = creerBouton("Connexion (Client ou Admin)", new Color(46, 204, 113));
+        btnInvite = creerBouton("Connexion rapide (Invité)", new Color(155, 89, 182));
 
         panelBoutons.add(btnInscription);
         panelBoutons.add(btnConnexion);
@@ -35,7 +36,6 @@ public class FenetreAccueil extends JFrame {
 
         add(panelBoutons, BorderLayout.CENTER);
 
-        // Actions
         btnInscription.addActionListener(e -> {
             new FenetreInscription().setVisible(true);
             dispose();
@@ -50,9 +50,20 @@ public class FenetreAccueil extends JFrame {
             new FenetreInvite().setVisible(true);
             dispose();
         });
+
+        setVisible(true);
+    }
+
+    private JButton creerBouton(String texte, Color couleur) {
+        JButton bouton = new JButton(texte);
+        bouton.setBackground(couleur);
+        bouton.setForeground(Color.WHITE);
+        bouton.setFocusPainted(false);
+        bouton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        return bouton;
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FenetreAccueil().setVisible(true));
+        SwingUtilities.invokeLater(FenetreAccueil::new);
     }
 }

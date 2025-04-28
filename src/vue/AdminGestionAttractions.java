@@ -9,6 +9,7 @@ import java.awt.*;
 import java.util.List;
 
 public class AdminGestionAttractions extends JFrame {
+    // Composants de l'interface graphique
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -16,51 +17,79 @@ public class AdminGestionAttractions extends JFrame {
 
     public AdminGestionAttractions() {
         setTitle("Gestion des Attractions (Admin)");
-        setSize(900, 600);
+        setSize(1100, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         attractionDAO = new AttractionDAO();
 
-        tableModel = new DefaultTableModel(new String[]{"ID", "Nom", "Type", "Prix", "Description", "Actif", "Image"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nom", "Type", "Prix", "Description", "Actif", "Image"}, 0) {
+            @Override
+            public Class<?> getColumnClass(int column) {
+                if (column == 6) return ImageIcon.class;
+                return String.class;
+            }
+        };
+
         table = new JTable(tableModel);
+        table.setRowHeight(100);
         JScrollPane scrollPane = new JScrollPane(table);
 
-        JButton refreshButton = new JButton("Rafraîchir");
-        JButton addButton = new JButton("Ajouter");
-        JButton editButton = new JButton("Modifier");
-        JButton deleteButton = new JButton("Supprimer");
-        JButton reportingButton = new JButton("Voir Reporting");
-
+        JButton refreshButton = creerBouton("Rafraîchir", new Color(52, 152, 219));
+        JButton addButton = creerBouton("Ajouter", new Color(46, 204, 113));
+        JButton editButton = creerBouton("Modifier", new Color(241, 196, 15));
+        JButton deleteButton = creerBouton("Supprimer", new Color(231, 76, 60));
+        JButton reportingButton = creerBouton("Voir Reporting", new Color(155, 89, 182));
+        JButton retourButton = creerBouton("Retour Accueil", new Color(52, 73, 94));
 
         refreshButton.addActionListener(e -> loadAttractions());
         addButton.addActionListener(e -> ajouterAttraction());
         editButton.addActionListener(e -> modifierAttraction());
         deleteButton.addActionListener(e -> supprimerAttraction());
-        reportingButton.addActionListener(e -> voirreporting());
+        reportingButton.addActionListener(e -> voirReporting());
+        retourButton.addActionListener(e -> {
+            new FenetreAccueil().setVisible(true);
+            dispose();
+        });
 
         JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new GridLayout(2, 3, 10, 10));
+        buttonsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         buttonsPanel.add(refreshButton);
         buttonsPanel.add(addButton);
         buttonsPanel.add(editButton);
         buttonsPanel.add(deleteButton);
         buttonsPanel.add(reportingButton);
+        buttonsPanel.add(retourButton);
 
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        add(panel);
+        add(scrollPane, BorderLayout.CENTER);
+        add(buttonsPanel, BorderLayout.SOUTH);
 
         loadAttractions();
 
         setVisible(true);
     }
 
+    private JButton creerBouton(String texte, Color couleur) {
+        JButton bouton = new JButton(texte);
+        bouton.setBackground(couleur);
+        bouton.setForeground(Color.WHITE);
+        bouton.setFocusPainted(false);
+        bouton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        return bouton;
+    }
+
     private void loadAttractions() {
         tableModel.setRowCount(0);
         List<Attraction> attractions = attractionDAO.findAll();
         for (Attraction a : attractions) {
+            ImageIcon imageIcon = null;
+            if (a.getImage() != null) {
+                ImageIcon originalIcon = new ImageIcon(a.getImage());
+                Image img = originalIcon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                imageIcon = new ImageIcon(img);
+            }
             tableModel.addRow(new Object[]{
                     a.getIdAttraction(),
                     a.getNom(),
@@ -68,7 +97,7 @@ public class AdminGestionAttractions extends JFrame {
                     a.getPrix(),
                     a.getDescription(),
                     a.isActif() ? "Oui" : "Non",
-                    a.getImagePath()
+                    imageIcon
             });
         }
     }
@@ -79,9 +108,18 @@ public class AdminGestionAttractions extends JFrame {
         double prix = Double.parseDouble(JOptionPane.showInputDialog(this, "Prix :"));
         String description = JOptionPane.showInputDialog(this, "Description :");
         boolean actif = JOptionPane.showConfirmDialog(this, "L'attraction est-elle active ?", "Actif", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-        String imagePath = JOptionPane.showInputDialog(this, "Chemin de l'image :");
-
-        Attraction attraction = new Attraction(0, nom, type, prix, description, actif, imagePath);
+        JFileChooser fileChooser = new JFileChooser();
+        int returnValue = fileChooser.showOpenDialog(this);
+        byte[] imageBytes = null;
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            try {
+                java.nio.file.Path path = fileChooser.getSelectedFile().toPath();
+                imageBytes = java.nio.file.Files.readAllBytes(path);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        Attraction attraction = new Attraction(0, nom, type, prix, description, actif, imageBytes);
         attractionDAO.insert(attraction);
         loadAttractions();
     }
@@ -95,9 +133,18 @@ public class AdminGestionAttractions extends JFrame {
             double prix = Double.parseDouble(JOptionPane.showInputDialog(this, "Prix :", tableModel.getValueAt(selectedRow, 3).toString()));
             String description = (String) JOptionPane.showInputDialog(this, "Description :", "Modifier", JOptionPane.PLAIN_MESSAGE, null, null, tableModel.getValueAt(selectedRow, 4));
             boolean actif = JOptionPane.showConfirmDialog(this, "L'attraction est-elle active ?", "Actif", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-            String imagePath = (String) JOptionPane.showInputDialog(this, "Chemin de l'image :", "Modifier", JOptionPane.PLAIN_MESSAGE, null, null, tableModel.getValueAt(selectedRow, 6));
-
-            Attraction attraction = new Attraction(id, nom, type, prix, description, actif, imagePath);
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(this);
+            byte[] imageBytes = null;
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                try {
+                    java.nio.file.Path path = fileChooser.getSelectedFile().toPath();
+                    imageBytes = java.nio.file.Files.readAllBytes(path);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            Attraction attraction = new Attraction(id, nom, type, prix, description, actif, imageBytes);
             attractionDAO.update(attraction);
             loadAttractions();
         } else {
@@ -119,7 +166,7 @@ public class AdminGestionAttractions extends JFrame {
         }
     }
 
-    public void voirreporting() {
+    public void voirReporting() {
         new ReportingAttractions().setVisible(true);
     }
 

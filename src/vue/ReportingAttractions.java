@@ -17,12 +17,28 @@ public class ReportingAttractions extends JFrame {
 
     public ReportingAttractions() {
         setTitle("Reporting des Attractions");
-        setSize(800, 600);
+        setSize(1000, 700);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         chargerDonnees();
-        add(new GraphiquePanel());
+
+        GraphiquePanel graphiquePanel = new GraphiquePanel();
+        add(graphiquePanel, BorderLayout.CENTER);
+
+        JButton btnRetour = creerBouton("Retour à l'Admin Panel", new Color(52, 152, 219));
+        JPanel panelBas = new JPanel();
+        panelBas.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panelBas.add(btnRetour);
+
+        add(panelBas, BorderLayout.SOUTH);
+
+        btnRetour.addActionListener(e -> {
+            new AdminGestionAttractions().setVisible(true);
+            dispose();
+        });
+
         setVisible(true);
     }
 
@@ -49,27 +65,39 @@ public class ReportingAttractions extends JFrame {
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
 
-            int x = 50;
-            int yBase = getHeight() - 100;
+            int margeGauche = 70;
+            int margeBas = 100;
+            int largeurBarre = 60;
+            int espaceEntre = 80;
 
-            int barWidth = 50;
-            int espace = 80;
-
+            int hauteurGraph = getHeight() - 2 * margeBas;
             int maxReservations = reservationsParAttraction.values().stream().max(Integer::compareTo).orElse(1);
 
-            for (Map.Entry<String, Integer> entry : reservationsParAttraction.entrySet()) {
-                int hauteur = (int) ((double) entry.getValue() / maxReservations * 300);
+            int x = margeGauche;
 
-                g.setColor(Color.BLUE);
-                g.fillRect(x, yBase - hauteur, barWidth, hauteur);
+            for (Map.Entry<String, Integer> entry : reservationsParAttraction.entrySet()) {
+                int hauteur = (int) ((double) entry.getValue() / maxReservations * hauteurGraph);
+
+                g.setColor(new Color(52, 152, 219));
+                g.fillRoundRect(x, getHeight() - margeBas - hauteur, largeurBarre, hauteur, 15, 15);
 
                 g.setColor(Color.BLACK);
-                g.drawString(entry.getKey(), x, yBase + 20);
-                g.drawString(String.valueOf(entry.getValue()), x, yBase - hauteur - 5);
+                g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                g.drawString(entry.getKey(), x - 10, getHeight() - margeBas + 20);
+                g.drawString(String.valueOf(entry.getValue()), x + 10, getHeight() - margeBas - hauteur - 10);
 
-                x += barWidth + espace;
+                x += largeurBarre + espaceEntre;
             }
         }
+    }
+
+    private JButton creerBouton(String texte, Color couleur) {
+        JButton bouton = new JButton(texte);
+        bouton.setBackground(couleur);
+        bouton.setForeground(Color.WHITE);
+        bouton.setFocusPainted(false);
+        bouton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        return bouton;
     }
 
     public static void main(String[] args) {

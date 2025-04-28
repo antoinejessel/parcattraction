@@ -15,39 +15,62 @@ public class FenetreConnexion extends JFrame {
 
     public FenetreConnexion() {
         setTitle("Connexion");
-        setSize(350, 220);
+        setSize(400, 300);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JPanel panelForm = new JPanel(new GridLayout(3, 2, 10, 10));
-        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        JLabel titre = new JLabel("Connexion Client/Admin", SwingConstants.CENTER);
+        titre.setFont(new Font("SansSerif", Font.BOLD, 22));
+        titre.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        add(titre, BorderLayout.NORTH);
 
-        panelForm.add(new JLabel("Email :"));
+        JPanel panelForm = new JPanel();
+        panelForm.setLayout(new BoxLayout(panelForm, BoxLayout.Y_AXIS));
+        panelForm.setBorder(BorderFactory.createEmptyBorder(20, 60, 20, 60));
+
         emailField = new JTextField();
-        panelForm.add(emailField);
+        emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        emailField.setBorder(BorderFactory.createTitledBorder("Email"));
 
-        panelForm.add(new JLabel("Mot de passe :"));
         passwordField = new JPasswordField();
-        panelForm.add(passwordField);
+        passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        passwordField.setBorder(BorderFactory.createTitledBorder("Mot de passe"));
 
-        labelErreur = new JLabel("");
+        labelErreur = new JLabel("", SwingConstants.CENTER);
         labelErreur.setForeground(Color.RED);
-        panelForm.add(labelErreur);
 
-        btnConnexion = new JButton("Connexion");
+        btnConnexion = creerBouton("Se connecter", new Color(46, 204, 113));
+        btnRetour = creerBouton("Retour", new Color(52, 152, 219));
+
+        panelForm.add(emailField);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(passwordField);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(labelErreur);
+        panelForm.add(Box.createVerticalStrut(20));
         panelForm.add(btnConnexion);
+        panelForm.add(Box.createVerticalStrut(10));
+        panelForm.add(btnRetour);
 
         add(panelForm, BorderLayout.CENTER);
-
-        btnRetour = new JButton("Retour à l'accueil");
-        add(btnRetour, BorderLayout.SOUTH);
 
         btnConnexion.addActionListener(e -> seConnecter());
         btnRetour.addActionListener(e -> {
             new FenetreAccueil().setVisible(true);
             dispose();
         });
+
+        setVisible(true);
+    }
+
+    private JButton creerBouton(String texte, Color couleur) {
+        JButton bouton = new JButton(texte);
+        bouton.setBackground(couleur);
+        bouton.setForeground(Color.WHITE);
+        bouton.setFocusPainted(false);
+        bouton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        return bouton;
     }
 
     private void seConnecter() {
@@ -62,16 +85,13 @@ public class FenetreConnexion extends JFrame {
         Client client = ClientDAO.findByEmail(email);
 
         if (client != null) {
-            String mdpBase = client.getMotDePasse().trim();
-
-            if (mdpBase.equals(motDePasse)) {
-                if (client.getTypeClient().equalsIgnoreCase("admin")) {
-                    new AdminGestionAttractions().setVisible(true); // CORRECTION ICI
+            if (client.getMotDePasse().trim().equals(motDePasse)) {
+                if (client.getTypeClient().equals("admin")) {
+                    new AdminGestionAttractions().setVisible(true);
                 } else {
                     new PageAttractions(client).setVisible(true);
                 }
                 dispose();
-
             } else {
                 labelErreur.setText("Mot de passe incorrect.");
             }
@@ -80,8 +100,7 @@ public class FenetreConnexion extends JFrame {
         }
     }
 
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new FenetreConnexion().setVisible(true));
+        SwingUtilities.invokeLater(FenetreConnexion::new);
     }
 }
