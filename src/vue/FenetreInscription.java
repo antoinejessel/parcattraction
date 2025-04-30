@@ -1,6 +1,6 @@
 package vue;
 
-import dao.ClientDAO;
+import controller.ClientController;
 import modele.Client;
 
 import javax.swing.*;
@@ -25,13 +25,11 @@ public class FenetreInscription extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Titre
         JLabel titre = new JLabel("Créer un compte", SwingConstants.CENTER);
         titre.setFont(new Font("SansSerif", Font.BOLD, 22));
         titre.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
         add(titre, BorderLayout.NORTH);
 
-        // Panel principal
         JPanel panelForm = new JPanel();
         panelForm.setLayout(new BoxLayout(panelForm, BoxLayout.Y_AXIS));
         panelForm.setBorder(BorderFactory.createEmptyBorder(20, 60, 20, 60));
@@ -58,7 +56,6 @@ public class FenetreInscription extends JFrame {
         btnInscription = creerBouton("S'inscrire", new Color(46, 204, 113));
         btnRetour = creerBouton("Retour", new Color(52, 152, 219));
 
-        // Ajout des composants
         panelForm.add(nomField);
         panelForm.add(Box.createVerticalStrut(10));
         panelForm.add(emailField);
@@ -94,33 +91,28 @@ public class FenetreInscription extends JFrame {
     }
 
     private void sInscrire() {
-        // Récupération des champs
         String nom = nomField.getText().trim();
         String email = emailField.getText().trim();
         String motDePasse = new String(passwordField.getPassword()).trim();
         String dateNaissanceTexte = dateNaissanceField.getText().trim();
 
-        // Vérification de remplissage
         if (nom.isEmpty() || email.isEmpty() || motDePasse.isEmpty() || dateNaissanceTexte.isEmpty()) {
             labelErreur.setText("Veuillez remplir tous les champs.");
             return;
         }
 
         try {
-            // Vérification format date
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             sdf.setLenient(false);
             Date utilDate = sdf.parse(dateNaissanceTexte);
             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
 
-            // Vérification email déjà utilisé
-            Client existingClient = ClientDAO.findByEmail(email);
+            Client existingClient = ClientController.trouverParEmail(email);
             if (existingClient != null) {
                 labelErreur.setText("Cet email est déjà utilisé.");
                 return;
             }
 
-            // Création du nouveau client
             Client client = new Client();
             client.setNom(nom);
             client.setEmail(email);
@@ -129,8 +121,7 @@ public class FenetreInscription extends JFrame {
             client.setTypeClient("membre");
             client.setPointsFidelite(0);
 
-            // Insertion
-            boolean success = ClientDAO.insert(client);
+            boolean success = ClientController.inscrire(client);
 
             if (success) {
                 JOptionPane.showMessageDialog(this, "Inscription réussie !");

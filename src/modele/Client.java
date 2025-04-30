@@ -1,6 +1,8 @@
 package modele;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.Period;
 
 public class Client {
     private int id;
@@ -23,6 +25,12 @@ public class Client {
         this.pointsFidelite = pointsFidelite;
     }
 
+    // ✅ Méthode pour calculer l'âge
+    public int getAge() {
+        if (dateNaissance == null) return 0;
+        return Period.between(dateNaissance.toLocalDate(), LocalDate.now()).getYears();
+    }
+
     // Getters
     public int getId() { return id; }
     public String getNom() { return nom; }
@@ -32,7 +40,7 @@ public class Client {
     public String getTypeClient() { return typeClient; }
     public int getPointsFidelite() { return pointsFidelite; }
 
-    // ✅ Setters
+    // Setters
     public void setId(int id) { this.id = id; }
     public void setNom(String nom) { this.nom = nom; }
     public void setEmail(String email) { this.email = email; }

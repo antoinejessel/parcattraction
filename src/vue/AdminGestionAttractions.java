@@ -1,6 +1,6 @@
 package vue;
 
-import dao.AttractionDAO;
+import controller.AttractionController;
 import modele.Attraction;
 
 import javax.swing.*;
@@ -9,11 +9,8 @@ import java.awt.*;
 import java.util.List;
 
 public class AdminGestionAttractions extends JFrame {
-    // Composants de l'interface graphique
-
     private JTable table;
     private DefaultTableModel tableModel;
-    private AttractionDAO attractionDAO;
 
     public AdminGestionAttractions() {
         setTitle("Gestion des Attractions (Admin)");
@@ -21,8 +18,6 @@ public class AdminGestionAttractions extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
-
-        attractionDAO = new AttractionDAO();
 
         tableModel = new DefaultTableModel(new String[]{"ID", "Nom", "Type", "Prix", "Description", "Actif", "Image"}, 0) {
             @Override
@@ -82,7 +77,7 @@ public class AdminGestionAttractions extends JFrame {
 
     private void loadAttractions() {
         tableModel.setRowCount(0);
-        List<Attraction> attractions = attractionDAO.findAll();
+        List<Attraction> attractions = AttractionController.getAllAttractions();
         for (Attraction a : attractions) {
             ImageIcon imageIcon = null;
             if (a.getImage() != null) {
@@ -120,7 +115,7 @@ public class AdminGestionAttractions extends JFrame {
             }
         }
         Attraction attraction = new Attraction(0, nom, type, prix, description, actif, imageBytes);
-        attractionDAO.insert(attraction);
+        AttractionController.ajouterAttraction(attraction);
         loadAttractions();
     }
 
@@ -145,7 +140,7 @@ public class AdminGestionAttractions extends JFrame {
                 }
             }
             Attraction attraction = new Attraction(id, nom, type, prix, description, actif, imageBytes);
-            attractionDAO.update(attraction);
+            AttractionController.modifierAttraction(attraction);
             loadAttractions();
         } else {
             JOptionPane.showMessageDialog(this, "Veuillez sélectionner une attraction à modifier.");
@@ -158,7 +153,7 @@ public class AdminGestionAttractions extends JFrame {
             int id = (int) tableModel.getValueAt(selectedRow, 0);
             int confirm = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer cette attraction ?", "Confirmation", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                attractionDAO.delete(id);
+                AttractionController.supprimerAttraction(id);
                 loadAttractions();
             }
         } else {
@@ -166,7 +161,7 @@ public class AdminGestionAttractions extends JFrame {
         }
     }
 
-    public void voirReporting() {
+    private void voirReporting() {
         new ReportingAttractions().setVisible(true);
     }
 

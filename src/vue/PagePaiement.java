@@ -1,27 +1,28 @@
 package vue;
 
-import dao.ReservationDAO;
+import controller.ReservationController;
 import modele.Client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.List;
 
 public class PagePaiement extends JFrame {
 
-    private double prix;
+    private double prixTotal;
     private int idAttraction;
     private Client clientConnecte;
-    private Date dateReservation;
+    private List<Timestamp> creneaux;
 
-    public PagePaiement(double prix, int idAttraction, Client clientConnecte, Date dateReservation) {
-        this.prix = prix;
+    public PagePaiement(double prixTotal, int idAttraction, Client clientConnecte, List<Timestamp> creneaux) {
+        this.prixTotal = prixTotal;
         this.idAttraction = idAttraction;
         this.clientConnecte = clientConnecte;
-        this.dateReservation = dateReservation;
+        this.creneaux = creneaux;
 
         setTitle("Paiement sécurisé");
-        setSize(450, 350);
+        setSize(500, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -34,52 +35,70 @@ public class PagePaiement extends JFrame {
         titre.setFont(new Font("SansSerif", Font.BOLD, 22));
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel labelMontant = new JLabel("Montant : " + prix + " €", SwingConstants.CENTER);
+        final boolean promoAppliquee = clientConnecte.getAge() <= 25;
+        final double prixFinal = promoAppliquee ? prixTotal * 0.70 : prixTotal;
+
+        String texteMontant = "Montant total : " + String.format("%.2f", prixFinal) + " €";
+        if (promoAppliquee) {
+            texteMontant += " (✅ réduction -30%)";
+        }
+        JLabel labelMontant = new JLabel(texteMontant, SwingConstants.CENTER);
         labelMontant.setFont(new Font("SansSerif", Font.PLAIN, 18));
         labelMontant.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JTextArea recapCreneaux = new JTextArea();
+        recapCreneaux.setEditable(false);
+        recapCreneaux.setBackground(new Color(245, 245, 245));
+        recapCreneaux.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        recapCreneaux.setBorder(BorderFactory.createTitledBorder("Créneaux sélectionnés"));
+
+        StringBuilder recapText = new StringBuilder();
+        for (Timestamp ts : creneaux) {
+            recapText.append("• ").append(ts.toLocalDateTime().toLocalDate())
+                    .append(" à ").append(ts.toLocalDateTime().toLocalTime()).append("\n");
+        }
+        recapCreneaux.setText(recapText.toString());
+
         JTextField champNumCarte = new JTextField();
         champNumCarte.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        champNumCarte.setAlignmentX(Component.CENTER_ALIGNMENT);
         champNumCarte.setBorder(BorderFactory.createTitledBorder("Numéro de carte (16 chiffres)"));
 
         JTextField champExpiration = new JTextField();
         champExpiration.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        champExpiration.setAlignmentX(Component.CENTER_ALIGNMENT);
         champExpiration.setBorder(BorderFactory.createTitledBorder("Expiration (MM/AA)"));
 
         JTextField champCVV = new JTextField();
         champCVV.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        champCVV.setAlignmentX(Component.CENTER_ALIGNMENT);
         champCVV.setBorder(BorderFactory.createTitledBorder("CVV (3 chiffres)"));
 
         JButton btnPayer = new JButton("Payer");
         btnPayer.setBackground(new Color(46, 204, 113));
         btnPayer.setForeground(Color.WHITE);
-        btnPayer.setFocusPainted(false);
         btnPayer.setFont(new Font("SansSerif", Font.BOLD, 16));
-        btnPayer.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton btnRetour = new JButton("Retour");
         btnRetour.setBackground(new Color(52, 152, 219));
         btnRetour.setForeground(Color.WHITE);
-        btnRetour.setFocusPainted(false);
         btnRetour.setFont(new Font("SansSerif", Font.BOLD, 16));
-        btnRetour.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel boutons = new JPanel();
+        boutons.add(btnPayer);
+        boutons.add(Box.createHorizontalStrut(10));
+        boutons.add(btnRetour);
 
         mainPanel.add(titre);
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(labelMontant);
-        mainPanel.add(Box.createVerticalStrut(15));
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(recapCreneaux);
+        mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(champNumCarte);
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(champExpiration);
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(champCVV);
         mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(btnPayer);
-        mainPanel.add(Box.createVerticalStrut(10));
-        mainPanel.add(btnRetour);
+        mainPanel.add(boutons);
 
         add(mainPanel, BorderLayout.CENTER);
 
@@ -108,14 +127,15 @@ public class PagePaiement extends JFrame {
                 return;
             }
 
-            boolean success = ReservationDAO.creerReservation(
-                    clientConnecte.getId(), idAttraction, dateReservation, prix);
+            double prixParCreneau = prixFinal / creneaux.size();
+            boolean success = ReservationController.reserverCreneaux(clientConnecte.getId(), idAttraction, creneaux, prixParCreneau);
 
             if (success) {
-                JOptionPane.showMessageDialog(this, "Paiement réussi et réservation confirmée !");
+                JOptionPane.showMessageDialog(this, "Paiement effectué et réservations enregistrées !");
+                new PageAttractions(clientConnecte).setVisible(true);
                 dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur lors du paiement.");
+                JOptionPane.showMessageDialog(this, "Erreur lors de la réservation. Aucun créneau réservé.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });
 

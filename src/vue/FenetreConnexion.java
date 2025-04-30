@@ -1,6 +1,6 @@
 package vue;
 
-import dao.ClientDAO;
+import controller.ClientController;
 import modele.Client;
 
 import javax.swing.*;
@@ -82,7 +82,7 @@ public class FenetreConnexion extends JFrame {
             return;
         }
 
-        Client client = ClientDAO.findByEmail(email);
+        Client client = ClientController.trouverParEmail(email);
 
         if (client != null) {
             if (client.getMotDePasse().trim().equals(motDePasse)) {

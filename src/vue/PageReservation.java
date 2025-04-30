@@ -1,115 +1,99 @@
 package vue;
 
-import dao.ReservationDAO;
 import modele.Client;
-
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.sql.Timestamp;
+import java.util.List;
 
 public class PageReservation extends JFrame {
 
+    private Client client;
     private int idAttraction;
-    private double prixAttraction;
-    private Client clientConnecte;
+    private double prixUnitaire;
+    private JCheckBox[] creneauxCheckBoxes;
+    private JSpinner dateSpinner;
 
-    public PageReservation(String nom, byte[] imageData, String description, int idAttraction, double prix, Client client) {
+    public PageReservation(String nomAttraction, byte[] imageData, String description, int idAttraction, double prixUnitaire, Client client) {
+        this.client = client;
         this.idAttraction = idAttraction;
-        this.prixAttraction = prix;
-        this.clientConnecte = client;
+        this.prixUnitaire = prixUnitaire;
 
-        setTitle("Réserver : " + nom);
-        setSize(600, 500);
+        setTitle("Réservation");
+        setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout());
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        setContentPane(mainPanel);
 
-        JLabel titre = new JLabel("Réserver votre attraction", SwingConstants.CENTER);
-        titre.setFont(new Font("SansSerif", Font.BOLD, 22));
-        titre.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel titre = new JLabel("Réserver : " + nomAttraction, SwingConstants.CENTER);
+        titre.setFont(new Font("Arial", Font.BOLD, 22));
+        mainPanel.add(titre, BorderLayout.NORTH);
 
-        JLabel imageLabel;
-        if (imageData != null) {
-            ImageIcon icon = new ImageIcon(imageData);
-            Image img = icon.getImage().getScaledInstance(400, 250, Image.SCALE_SMOOTH);
-            imageLabel = new JLabel(new ImageIcon(img));
-        } else {
-            imageLabel = new JLabel("Image non trouvée");
-        }
-        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
 
-        JTextArea area = new JTextArea(description);
-        area.setWrapStyleWord(true);
-        area.setLineWrap(true);
-        area.setEditable(false);
-        area.setOpaque(false);
-        area.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        area.setMaximumSize(new Dimension(500, 100));
-        area.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel reservationPanel = new JPanel();
-        reservationPanel.setLayout(new FlowLayout());
-
-        JLabel labelDate = new JLabel("Choisissez une date :");
-        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
+        dateSpinner = new JSpinner(new SpinnerDateModel());
         dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd"));
-        dateSpinner.setPreferredSize(new Dimension(120, 25));
+        centerPanel.add(new JLabel("Date :"));
+        centerPanel.add(dateSpinner);
 
-        JButton btnReserver = new JButton("Payer et Réserver");
-        btnReserver.setBackground(new Color(46, 204, 113));
-        btnReserver.setForeground(Color.WHITE);
-        btnReserver.setFocusPainted(false);
-        btnReserver.setFont(new Font("SansSerif", Font.BOLD, 16));
+        centerPanel.add(Box.createVerticalStrut(10));
+        centerPanel.add(new JLabel("Créneaux disponibles :"));
 
-        JButton btnRetour = new JButton("Retour");
-        btnRetour.setBackground(new Color(52, 152, 219));
-        btnRetour.setForeground(Color.WHITE);
-        btnRetour.setFocusPainted(false);
-        btnRetour.setFont(new Font("SansSerif", Font.BOLD, 16));
+        JPanel creneauxPanel = new JPanel(new GridLayout(0, 3, 10, 5));
+        String[] horaires = {
+                "10:00", "10:30", "11:00", "11:30",
+                "12:00", "12:30", "13:00", "13:30",
+                "14:00", "14:30", "15:00", "15:30",
+                "16:00", "16:30", "17:00", "17:30"
+        };
+        creneauxCheckBoxes = new JCheckBox[horaires.length];
+        for (int i = 0; i < horaires.length; i++) {
+            creneauxCheckBoxes[i] = new JCheckBox(horaires[i]);
+            creneauxPanel.add(creneauxCheckBoxes[i]);
+        }
+        centerPanel.add(creneauxPanel);
 
-        reservationPanel.add(labelDate);
-        reservationPanel.add(dateSpinner);
+        JButton btnReserver = new JButton("Valider les créneaux");
+        btnReserver.addActionListener(e -> reserver());
+        centerPanel.add(Box.createVerticalStrut(20));
+        centerPanel.add(btnReserver);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout());
-        buttonPanel.add(btnReserver);
-        buttonPanel.add(btnRetour);
-
-        mainPanel.add(titre);
-        mainPanel.add(Box.createVerticalStrut(15));
-        mainPanel.add(imageLabel);
-        mainPanel.add(Box.createVerticalStrut(15));
-        mainPanel.add(area);
-        mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(reservationPanel);
-        mainPanel.add(Box.createVerticalStrut(20));
-        mainPanel.add(buttonPanel);
-
-        add(mainPanel, BorderLayout.CENTER);
-
-        btnReserver.addActionListener(e -> {
-            Date utilDate = (Date) dateSpinner.getValue();
-            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
-            java.sql.Date aujourdHui = new java.sql.Date(System.currentTimeMillis());
-
-            if (sqlDate.before(aujourdHui)) {
-                JOptionPane.showMessageDialog(this, "Vous ne pouvez pas réserver pour une date passée.", "Date invalide", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            new PagePaiement(prixAttraction, idAttraction, clientConnecte, sqlDate).setVisible(true);
-            dispose();
-        });
-
-        btnRetour.addActionListener(e -> {
-            new PageAttractions(clientConnecte).setVisible(true);
-            dispose();
-        });
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         setVisible(true);
+    }
+
+    private void reserver() {
+        Date utilDate = (Date) dateSpinner.getValue();
+        LocalDate selectedDate = utilDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+        List<Timestamp> creneauxChoisis = new ArrayList<>();
+
+        for (JCheckBox box : creneauxCheckBoxes) {
+            if (box.isSelected()) {
+                LocalTime heure = LocalTime.parse(box.getText());
+                Timestamp ts = Timestamp.valueOf(selectedDate.atTime(heure));
+                creneauxChoisis.add(ts);
+            }
+        }
+
+        if (creneauxChoisis.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner au moins un créneau.");
+            return;
+        }
+
+        double prixTotal = prixUnitaire * creneauxChoisis.size();
+
+        // Redirection vers la page de paiement
+        new PagePaiement(prixTotal, idAttraction, client, creneauxChoisis).setVisible(true);
+        dispose();
     }
 }
